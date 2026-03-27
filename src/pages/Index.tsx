@@ -23,7 +23,7 @@ function dateToKey(d: Date) {
 }
 
 export default function Index() {
-  const { toggleMeal, toggleItem, isItemChecked, isMealChecked, getCheckedCount, setItemEdit, getItemEdit } = useMealChecks();
+  const { toggleMeal, toggleItem, isItemChecked, isMealChecked, getCheckedCount, setItemEdit, getItemEdit, removedItems, setRemovedItems } = useMealChecks();
   const today = new Date();
   const todayStr = dateToKey(today);
 
@@ -35,7 +35,32 @@ export default function Index() {
   const dayMeals = getMealsForDay(dayOfWeek);
   const mainMeals = dayMeals.filter((m) => !m.isOption);
 
-  const totalDailyCalories = dayMeals.reduce((sum, m) => sum + m.totalCalories, 0);
+  // Calculate total daily calories considering edits
+  const totalDailyCalories = dayMeals.reduce((sum, m) => {
+    const mealTotal = m.items.reduce((itemSum, item, i) => {
+      const edit = getItemEdit(m.id, i, selectedKey);
+      return itemSum + (edit.calories !== undefined ? edit.calories : (item.calories || 0));
+    }, 0);
+    return sum + mealTotal;
+  }, 0);
+
+  // Calculate consumed calories for today
+  const consumedCaloriesForDay = dayMeals.reduce((sum, m) => {
+    const mealTotal = m.items.reduce((itemSum, item, i) => {
+      const edit = getItemEdit(m.id, i, selectedKey);
+      const itemCalories = edit.calories !== undefined ? edit.calories : (item.calories || 0);
+      const isRemoved = isItemChecked(m.id, i, selectedKey);
+      
+      // If item is not removed, it's consumed
+      if (!isRemoved) {
+        return itemSum + itemCalories;
+      }
+      return itemSum;
+    }, 0);
+    return sum + mealTotal;
+  }, 0);
+
+  const remainingCalories = Math.max(0, totalDailyCalories - consumedCaloriesForDay);
 
   const isToday = selectedKey === todayStr;
   const dayLabel = WEEKDAYS[selectedDate.getDay()];
@@ -44,6 +69,46 @@ export default function Index() {
     const d = new Date(selectedDate);
     d.setDate(d.getDate() + dir * 7);
     setSelectedDate(d);
+  };
+
+  const handleToggleMeal = (mealId: string) => {
+    const isMealCurrentlyChecked = isMealChecked(mealId, selectedKey);
+    
+    // If checking the meal, mark all non-removed items as consumed
+    if (!isMealCurrentlyChecked) {
+      const meal = dayMeals.find((m) => m.id === mealId);
+      if (meal) {
+        // Mark all items that are not already removed as consumed
+        setRemovedItems((prev) => {
+          const dayItems = prev[selectedKey] || {};
+          const mealItems = dayItems[mealId] || [];
+          
+          // Add all items to the removed list (marking them as consumed)
+          const updatedMealItems = meal.items.map((_, i) => String(i));
+          
+          return {
+            ...prev,
+            [selectedKey]: {
+              ...dayItems,
+              [mealId]: updatedMealItems,
+            },
+          };
+        });
+      }
+    } else {
+      // If unchecking the meal, clear all removed items for this meal
+      setRemovedItems((prev) => {
+        const dayItems = prev[selectedKey] || {};
+        const { [mealId]: _, ...rest } = dayItems;
+        
+        return {
+          ...prev,
+          [selectedKey]: rest,
+        };
+      });
+    }
+    
+    toggleMeal(mealId, selectedKey);
   };
 
   return (
@@ -61,22 +126,33 @@ export default function Index() {
 
       <div className="max-w-lg mx-auto px-4">
         {/* Calories summary */}
-        <div className="mt-4 rounded-xl bg-card p-4 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Meta diária estimada</p>
-            <p className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Flame className="w-5 h-5 text-accent" />
-              ~{totalDailyCalories} kcal
-            </p>
+        <div className="mt-4 rounded-xl bg-card p-4 shadow-sm">
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Consumidas</p>
+              <p className="text-xl font-bold text-primary flex items-center gap-1">
+                <Flame className="w-4 h-4" />
+                {consumedCaloriesForDay} kcal
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground mb-1">Restantes</p>
+              <p className="text-xl font-bold text-accent">
+                {remainingCalories} kcal
+              </p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">
-              Feitas {isToday ? "hoje" : dayLabel.toLowerCase()}
-            </p>
-            <p className="text-2xl font-bold text-primary">
-              {getCheckedCount(selectedKey)}/{mainMeals.length}
-            </p>
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-primary to-accent h-full transition-all duration-300"
+              style={{
+                width: `${totalDailyCalories > 0 ? (consumedCaloriesForDay / totalDailyCalories) * 100 : 0}%`,
+              }}
+            />
           </div>
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            Meta diária: ~{totalDailyCalories} kcal
+          </p>
         </div>
 
         {/* Week navigation */}
@@ -134,7 +210,7 @@ export default function Index() {
               key={meal.id}
               meal={meal}
               isChecked={isMealChecked(meal.id, selectedKey)}
-              onToggle={() => toggleMeal(meal.id, selectedKey)}
+              onToggle={() => handleToggleMeal(meal.id)}
               onToggleItem={(idx) => toggleItem(meal.id, idx, selectedKey)}
               isItemChecked={(idx) => isItemChecked(meal.id, idx, selectedKey)}
               getItemEdit={(idx) => getItemEdit(meal.id, idx, selectedKey)}

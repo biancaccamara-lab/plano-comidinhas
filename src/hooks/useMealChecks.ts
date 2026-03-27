@@ -16,8 +16,14 @@ interface CheckedItems {
 interface MealEdits {
   [dateKey: string]: {
     [mealId: string]: {
-      [itemIndex: number]: { name?: string; portion?: string };
+      [itemIndex: number]: { name?: string; portion?: string; calories?: number };
     };
+  };
+}
+
+interface RemovedItems {
+  [dateKey: string]: {
+    [mealId: string]: string[]; // array of item indices that were removed
   };
 }
 
@@ -49,6 +55,15 @@ export function useMealChecks() {
     }
   });
 
+  const [removedItems, setRemovedItems] = useState<RemovedItems>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY + "-removed");
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
   }, [checked]);
@@ -60,6 +75,10 @@ export function useMealChecks() {
   useEffect(() => {
     localStorage.setItem(EDITS_KEY, JSON.stringify(edits));
   }, [edits]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY + "-removed", JSON.stringify(removedItems));
+  }, [removedItems]);
 
   const todayKey = new Date().toISOString().split("T")[0];
 
@@ -79,16 +98,17 @@ export function useMealChecks() {
 
   const toggleItem = (mealId: string, itemIndex: number, dateKey?: string) => {
     const key = dateKey || todayKey;
-    setCheckedItems((prev) => {
+    // Remove the item instead of marking as consumed
+    setRemovedItems((prev) => {
       const dayItems = prev[key] || {};
       const mealItems = dayItems[mealId] || [];
       const indexStr = String(itemIndex);
-      const isChecked = mealItems.includes(indexStr);
+      const isRemoved = mealItems.includes(indexStr);
       return {
         ...prev,
         [key]: {
           ...dayItems,
-          [mealId]: isChecked
+          [mealId]: isRemoved
             ? mealItems.filter((i) => i !== indexStr)
             : [...mealItems, indexStr],
         },
@@ -98,7 +118,12 @@ export function useMealChecks() {
 
   const isItemChecked = (mealId: string, itemIndex: number, dateKey?: string) => {
     const key = dateKey || todayKey;
-    return ((checkedItems[key] || {})[mealId] || []).includes(String(itemIndex));
+    return ((removedItems[key] || {})[mealId] || []).includes(String(itemIndex));
+  };
+
+  const isItemRemoved = (mealId: string, itemIndex: number, dateKey?: string) => {
+    const key = dateKey || todayKey;
+    return ((removedItems[key] || {})[mealId] || []).includes(String(itemIndex));
   };
 
   const isMealChecked = (mealId: string, dateKey?: string) => {
@@ -133,5 +158,41 @@ export function useMealChecks() {
     return ((edits[key] || {})[mealId] || {})[itemIndex] || {};
   };
 
-  return { toggleMeal, toggleItem, isItemChecked, isMealChecked, getCheckedCount, todayKey, setItemEdit, getItemEdit };
+  const toggleMealWithItems = (mealId: string, dateKey?: string) => {
+    const key = dateKey || todayKey;
+    setChecked((prev) => {
+      const dayChecks = prev[key] || [];
+      const isChecked = dayChecks.includes(mealId);
+      
+      if (!isChecked) {
+        // When checking the meal, mark all non-removed items as consumed
+        setRemovedItems((prevRemoved) => {
+          const dayItems = prevRemoved[key] || {};
+          // This will be handled in the component
+          return prevRemoved;
+        });
+      }
+      
+      return {
+        ...prev,
+        [key]: isChecked
+          ? dayChecks.filter((id) => id !== mealId)
+          : [...dayChecks, mealId],
+      };
+    });
+  };
+
+  return { 
+    toggleMeal: toggleMealWithItems, 
+    toggleItem, 
+    isItemChecked, 
+    isItemRemoved,
+    isMealChecked, 
+    getCheckedCount, 
+    todayKey, 
+    setItemEdit, 
+    getItemEdit,
+    removedItems,
+    setRemovedItems
+  };
 }

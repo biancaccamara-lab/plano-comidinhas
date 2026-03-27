@@ -8,8 +8,9 @@ interface MealCardProps {
   onToggle: () => void;
   onToggleItem: (itemIndex: number) => void;
   isItemChecked: (itemIndex: number) => boolean;
-  getItemEdit: (itemIndex: number) => { name?: string; portion?: string };
-  onEditItem: (itemIndex: number, field: "name" | "portion", value: string) => void;
+  getItemEdit: (itemIndex: number) => { name?: string; portion?: string; calories?: number };
+  onEditItem: (itemIndex: number, field: "name" | "portion" | "calories", value: string) => void;
+  removedItems?: string[];
 }
 
 const typeStyles: Record<Meal["type"], string> = {
@@ -39,9 +40,28 @@ export default function MealCard({
   const [showRecipe, setShowRecipe] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  // Calculate consumed calories (items NOT removed when meal is not checked, or all items when meal is checked)
   const consumedCalories = meal.items.reduce((sum, item, i) => {
-    if (isItemChecked(i)) return sum + (item.calories || 0);
+    const edit = getItemEdit(i);
+    const itemCalories = edit.calories !== undefined ? edit.calories : (item.calories || 0);
+    
+    if (isChecked) {
+      // When meal is checked, all non-removed items are consumed
+      if (!isItemChecked(i)) {
+        return sum + itemCalories;
+      }
+    } else {
+      // When meal is not checked, removed items don't count
+      if (!isItemChecked(i)) {
+        return sum + itemCalories;
+      }
+    }
     return sum;
+  }, 0);
+
+  const totalCaloriesWithEdits = meal.items.reduce((sum, item, i) => {
+    const edit = getItemEdit(i);
+    return sum + (edit.calories !== undefined ? edit.calories : (item.calories || 0));
   }, 0);
 
   return (
@@ -85,7 +105,7 @@ export default function MealCard({
           onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          🔥 <span className="font-medium text-accent">{consumedCalories}/{meal.totalCalories} kcal</span>
+          🔥 <span className="font-medium text-accent">{consumedCalories}/{totalCaloriesWithEdits} kcal</span>
           <span className="ml-1 flex items-center gap-0.5">
             {expanded ? "Recolher" : "Ver itens"}
             {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -153,13 +173,23 @@ export default function MealCard({
                       onBlur={(e) => onEditItem(i, "portion", e.target.value)}
                       placeholder="Porção"
                     />
+                    <input
+                      className="text-xs bg-background border border-input rounded px-2 py-1 w-full"
+                      type="number"
+                      defaultValue={edit.calories !== undefined ? edit.calories : (item.calories || 0)}
+                      onBlur={(e) => onEditItem(i, "calories", e.target.value)}
+                      placeholder="Calorias"
+                    />
                   </div>
                 ) : (
                   <div className="flex-1 flex items-baseline justify-between gap-2 min-w-0">
                     <span className={itemChecked ? "line-through text-muted-foreground" : "text-foreground"}>
                       {displayName}
                     </span>
-                    <span className="text-muted-foreground text-xs shrink-0">{displayPortion}</span>
+                    <span className="text-muted-foreground text-xs shrink-0 flex gap-1">
+                      <span>{displayPortion}</span>
+                      <span className="text-primary font-medium">({edit.calories !== undefined ? edit.calories : (item.calories || 0)} kcal)</span>
+                    </span>
                   </div>
                 )}
 
