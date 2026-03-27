@@ -2,7 +2,7 @@ import { useState } from "react";
 import { meals, getMealsForDay } from "@/data/mealPlan";
 import { useMealChecks } from "@/hooks/useMealChecks";
 import MealCard from "@/components/MealCard";
-import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
+import { Flame, ChevronLeft, ChevronRight, Target } from "lucide-react";
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -40,29 +40,29 @@ export default function Index() {
     const mealTotal = m.items.reduce((itemSum, item, i) => {
       const edit = getItemEdit(m.id, i, selectedKey);
       const isRemoved = isItemChecked(m.id, i, selectedKey);
-      if (isRemoved) return itemSum; // Skip removed items
+      if (isRemoved) return itemSum;
       return itemSum + (edit.calories !== undefined ? edit.calories : (item.calories || 0));
     }, 0);
     return sum + mealTotal;
   }, 0);
 
-  // Calculate consumed calories: sum of all meals that are checked
+  // Calculate consumed calories
   const consumedCaloriesForDay = dayMeals.reduce((sum, m) => {
     if (!isMealChecked(m.id, selectedKey)) {
-      return sum; // Meal not checked, so no calories consumed
+      return sum;
     }
     
-    // Meal is checked: sum all non-removed items
     const mealTotal = m.items.reduce((itemSum, item, i) => {
       const edit = getItemEdit(m.id, i, selectedKey);
       const isRemoved = isItemChecked(m.id, i, selectedKey);
-      if (isRemoved) return itemSum; // Skip removed items
+      if (isRemoved) return itemSum;
       return itemSum + (edit.calories !== undefined ? edit.calories : (item.calories || 0));
     }, 0);
     return sum + mealTotal;
   }, 0);
 
   const remainingCalories = Math.max(0, totalDailyCalories - consumedCaloriesForDay);
+  const progressPercentage = totalDailyCalories > 0 ? (consumedCaloriesForDay / totalDailyCalories) * 100 : 0;
 
   const isToday = selectedKey === todayStr;
   const dayLabel = WEEKDAYS[selectedDate.getDay()];
@@ -74,55 +74,79 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen pb-8">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-4 py-4">
+    <div className="min-h-screen pb-12 bg-gradient-to-b from-background to-background/95">
+      <header className="sticky top-0 z-10 glass-effect border-b border-white/20 px-4 py-5 sm:py-6">
         <div className="max-w-lg mx-auto">
-          <h1 className="font-display text-2xl font-bold text-foreground">
-            Meu Plano Alimentar
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Nutricionista Isadora Miranda • Bianca
-          </p>
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20">
+              <Target className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Plano Alimentar
+              </h1>
+              <p className="text-xs text-muted-foreground">Isadora Miranda • Bianca</p>
+            </div>
+          </div>
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4">
-        {/* Calories summary */}
-        <div className="mt-4 rounded-xl bg-card p-4 shadow-sm">
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Consumidas</p>
-              <p className="text-xl font-bold text-primary flex items-center gap-1">
-                <Flame className="w-4 h-4" />
-                {consumedCaloriesForDay} kcal
-              </p>
+      <div className="max-w-lg mx-auto px-4 sm:px-6">
+        {/* Calories summary - Premium Dashboard */}
+        <div className="mt-6 rounded-2xl bg-gradient-to-br from-primary/10 via-white to-accent/10 p-5 sm:p-6 smooth-shadow-lg border border-primary/10">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-primary/20">
+                <Flame className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Progresso</p>
+                <p className="text-sm font-bold text-foreground">{dayLabel}</p>
+              </div>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground mb-1">Restantes</p>
-              <p className="text-xl font-bold text-accent">
-                {remainingCalories} kcal
+              <p className="text-xs text-muted-foreground mb-1">Refeições</p>
+              <p className="text-2xl font-bold text-primary">
+                {getCheckedCount(selectedKey)}/{mainMeals.length}
               </p>
             </div>
           </div>
-          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-primary to-accent h-full transition-all duration-300"
-              style={{
-                width: `${totalDailyCalories > 0 ? (consumedCaloriesForDay / totalDailyCalories) * 100 : 0}%`,
-              }}
-            />
+
+          {/* Progress Bar */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-end gap-3">
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground mb-1.5 font-medium">Consumidas</p>
+                <p className="text-3xl font-bold text-primary">{consumedCaloriesForDay}</p>
+              </div>
+              <div className="flex-1 text-right">
+                <p className="text-xs text-muted-foreground mb-1.5 font-medium">Restantes</p>
+                <p className="text-3xl font-bold text-accent">{remainingCalories}</p>
+              </div>
+            </div>
+            <div className="w-full bg-white/60 rounded-full h-3 overflow-hidden border border-primary/10">
+              <div
+                className="bg-gradient-to-r from-primary via-primary to-accent h-full transition-all duration-500 ease-out rounded-full shadow-lg"
+                style={{
+                  width: `${progressPercentage}%`,
+                }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center font-semibold">
+              Meta: {totalDailyCalories} kcal
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            Meta diária: ~{totalDailyCalories} kcal
-          </p>
         </div>
 
         {/* Week navigation */}
-        <div className="mt-6 flex items-center gap-2">
-          <button onClick={() => shiftWeek(-1)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+        <div className="mt-8 flex items-center gap-2">
+          <button 
+            onClick={() => shiftWeek(-1)} 
+            className="p-2.5 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95"
+          >
+            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
           </button>
-          <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1">
+          <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 scroll-smooth">
             {weekDates.map((date) => {
               const dateStr = dateToKey(date);
               const isSelected = dateStr === selectedKey;
@@ -134,20 +158,20 @@ export default function Index() {
                 <button
                   key={dateStr}
                   onClick={() => setSelectedDate(date)}
-                  className={`flex flex-col items-center min-w-[3.2rem] px-2 py-2 rounded-xl text-center transition-colors ${
+                  className={`flex flex-col items-center min-w-[3.5rem] px-3 py-3 rounded-xl text-center transition-all duration-200 font-medium active:scale-95 ${
                     isSelected
-                      ? "bg-primary text-primary-foreground shadow-md"
+                      ? "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg scale-105"
                       : isTodayDate
-                      ? "bg-accent/15 text-foreground ring-1 ring-accent/30"
-                      : "bg-card text-foreground hover:bg-muted"
+                      ? "bg-accent/20 text-foreground ring-2 ring-accent/50 hover:bg-accent/30"
+                      : "bg-white text-foreground hover:bg-muted/50 smooth-shadow"
                   }`}
                 >
-                  <span className="text-[10px] font-medium uppercase tracking-wide opacity-70">
+                  <span className="text-[11px] font-bold uppercase tracking-wider opacity-70">
                     {dayName.slice(0, 3)}
                   </span>
-                  <span className="text-lg font-bold leading-tight">{date.getDate()}</span>
+                  <span className="text-lg font-bold leading-tight mt-1">{date.getDate()}</span>
                   {checkedCount > 0 && (
-                    <span className={`text-[10px] mt-0.5 ${isSelected ? "text-primary-foreground/80" : "text-primary"}`}>
+                    <span className={`text-[10px] mt-1 font-bold ${isSelected ? "text-primary-foreground/90" : "text-primary"}`}>
                       {checkedCount}✓
                     </span>
                   )}
@@ -155,18 +179,21 @@ export default function Index() {
               );
             })}
           </div>
-          <button onClick={() => shiftWeek(1)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          <button 
+            onClick={() => shiftWeek(1)} 
+            className="p-2.5 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95"
+          >
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
         {/* Selected day label */}
-        <p className="mt-3 text-sm text-muted-foreground text-center">
-          {isToday ? "Hoje" : `${dayLabel}, ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`}
+        <p className="mt-5 text-sm font-semibold text-foreground text-center">
+          {isToday ? "📅 Hoje" : `${dayLabel}, ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`}
         </p>
 
         {/* Meals for the selected day */}
-        <div className="mt-4 space-y-3">
+        <div className="mt-6 space-y-3 sm:space-y-4">
           {dayMeals.map((meal) => (
             <MealCard
               key={meal.id}
@@ -182,13 +209,28 @@ export default function Index() {
         </div>
 
         {/* Tips */}
-        <div className="mt-8 rounded-xl bg-secondary/50 p-4">
-          <h3 className="font-semibold text-sm text-secondary-foreground mb-2">💡 Dicas</h3>
-          <ul className="text-xs text-muted-foreground space-y-1.5">
-            <li>• Frutas cítricas após refeições ajudam na absorção do ferro</li>
-            <li>• Evite café/chá mate logo após o almoço (espere 45 min)</li>
-            <li>• Coma devagar e mastigue com calma</li>
-            <li>• Prefira preparações cozidas, assadas ou grelhadas</li>
+        <div className="mt-10 rounded-2xl bg-gradient-to-br from-secondary/20 to-accent/10 p-5 sm:p-6 border border-secondary/20 smooth-shadow">
+          <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
+            <span className="text-lg">💡</span>
+            <span>Dicas de Bem-estar</span>
+          </h3>
+          <ul className="text-xs text-muted-foreground space-y-2.5">
+            <li className="flex gap-2 leading-relaxed">
+              <span className="text-primary font-bold mt-0.5">•</span>
+              <span>Frutas cítricas após refeições ajudam na absorção do ferro</span>
+            </li>
+            <li className="flex gap-2 leading-relaxed">
+              <span className="text-primary font-bold mt-0.5">•</span>
+              <span>Evite café/chá mate logo após o almoço (espere 45 min)</span>
+            </li>
+            <li className="flex gap-2 leading-relaxed">
+              <span className="text-primary font-bold mt-0.5">•</span>
+              <span>Coma devagar e mastigue com calma</span>
+            </li>
+            <li className="flex gap-2 leading-relaxed">
+              <span className="text-primary font-bold mt-0.5">•</span>
+              <span>Prefira preparações cozidas, assadas ou grelhadas</span>
+            </li>
           </ul>
         </div>
       </div>
