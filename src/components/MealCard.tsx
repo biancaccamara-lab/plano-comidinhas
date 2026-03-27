@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown, ChevronUp, Pencil, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Pencil, X, BookOpen } from "lucide-react";
 import type { Meal } from "@/data/mealPlan";
 
 interface MealCardProps {
@@ -36,6 +36,7 @@ export default function MealCard({
   onEditItem,
 }: MealCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [showRecipe, setShowRecipe] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const consumedCalories = meal.items.reduce((sum, item, i) => {
@@ -49,7 +50,7 @@ export default function MealCard({
         isChecked ? "checked-meal" : "shadow-sm"
       }`}
     >
-      {/* Header - toggles meal check */}
+      {/* Header */}
       <button
         onClick={onToggle}
         className="w-full text-left p-4 pb-2 flex items-start justify-between gap-3"
@@ -78,19 +79,38 @@ export default function MealCard({
         </div>
       </button>
 
-      {/* Expand toggle */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <span className="flex items-center gap-1.5">
+      {/* Expand & recipe toggle */}
+      <div className="flex items-center justify-between px-4 py-2">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
           🔥 <span className="font-medium text-accent">{consumedCalories}/{meal.totalCalories} kcal</span>
-        </span>
-        <span className="flex items-center gap-1">
-          {expanded ? "Recolher" : "Ver itens"}
-          {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-        </span>
-      </button>
+          <span className="ml-1 flex items-center gap-0.5">
+            {expanded ? "Recolher" : "Ver itens"}
+            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </span>
+        </button>
+
+        {meal.recipe && (
+          <button
+            onClick={() => setShowRecipe(!showRecipe)}
+            className={`flex items-center gap-1 text-xs transition-colors ${
+              showRecipe ? "text-accent font-medium" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Receita
+          </button>
+        )}
+      </div>
+
+      {/* Recipe */}
+      {showRecipe && meal.recipe && (
+        <div className="mx-4 mb-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
+          <p className="text-xs text-foreground leading-relaxed">{meal.recipe}</p>
+        </div>
+      )}
 
       {/* Items list */}
       {expanded && (
@@ -109,13 +129,10 @@ export default function MealCard({
                   itemChecked ? "bg-primary/5" : "hover:bg-muted/50"
                 }`}
               >
-                {/* Item checkbox */}
                 <button
                   onClick={() => onToggleItem(i)}
                   className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                    itemChecked
-                      ? "bg-primary border-primary"
-                      : "border-muted-foreground/30"
+                    itemChecked ? "bg-primary border-primary" : "border-muted-foreground/30"
                   }`}
                 >
                   {itemChecked && <Check className="w-3 h-3 text-primary-foreground" />}
@@ -146,7 +163,6 @@ export default function MealCard({
                   </div>
                 )}
 
-                {/* Edit button */}
                 <button
                   onClick={() => setEditingIndex(isEditing ? null : i)}
                   className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
