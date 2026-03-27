@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown, ChevronUp, Pencil, X, BookOpen } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Pencil, X, BookOpen, Trash2 } from "lucide-react";
 import type { Meal } from "@/data/mealPlan";
 
 interface MealCardProps {
@@ -10,7 +10,6 @@ interface MealCardProps {
   isItemChecked: (itemIndex: number) => boolean;
   getItemEdit: (itemIndex: number) => { name?: string; portion?: string; calories?: number };
   onEditItem: (itemIndex: number, field: "name" | "portion" | "calories", value: string) => void;
-  removedItems?: string[];
 }
 
 const typeStyles: Record<Meal["type"], string> = {
@@ -40,29 +39,15 @@ export default function MealCard({
   const [showRecipe, setShowRecipe] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  // Calculate consumed calories (items NOT removed when meal is not checked, or all items when meal is checked)
-  const consumedCalories = meal.items.reduce((sum, item, i) => {
-    const edit = getItemEdit(i);
-    const itemCalories = edit.calories !== undefined ? edit.calories : (item.calories || 0);
-    
-    if (isChecked) {
-      // When meal is checked, all non-removed items are consumed
-      if (!isItemChecked(i)) {
-        return sum + itemCalories;
-      }
-    } else {
-      // When meal is not checked, removed items don't count
-      if (!isItemChecked(i)) {
-        return sum + itemCalories;
-      }
-    }
-    return sum;
-  }, 0);
-
-  const totalCaloriesWithEdits = meal.items.reduce((sum, item, i) => {
+  // Calculate total calories of items NOT removed
+  const totalCaloriesAvailable = meal.items.reduce((sum, item, i) => {
+    if (isItemChecked(i)) return sum; // Skip removed items
     const edit = getItemEdit(i);
     return sum + (edit.calories !== undefined ? edit.calories : (item.calories || 0));
   }, 0);
+
+  // If meal is checked, all available items (not removed) are consumed
+  const consumedCalories = isChecked ? totalCaloriesAvailable : 0;
 
   return (
     <div
@@ -105,7 +90,7 @@ export default function MealCard({
           onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          🔥 <span className="font-medium text-accent">{consumedCalories}/{totalCaloriesWithEdits} kcal</span>
+          🔥 <span className="font-medium text-accent">{consumedCalories}/{totalCaloriesAvailable} kcal</span>
           <span className="ml-1 flex items-center gap-0.5">
             {expanded ? "Recolher" : "Ver itens"}
             {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -139,23 +124,29 @@ export default function MealCard({
             const edit = getItemEdit(i);
             const displayName = edit.name || item.name;
             const displayPortion = edit.portion || item.portion;
-            const itemChecked = isItemChecked(i);
+            const itemRemoved = isItemChecked(i);
             const isEditing = editingIndex === i;
+
+            // Don't show removed items
+            if (itemRemoved) {
+              return null;
+            }
 
             return (
               <div
                 key={i}
                 className={`flex items-center gap-2 text-sm rounded-md px-2 py-1.5 transition-colors ${
-                  itemChecked ? "bg-primary/5" : "hover:bg-muted/50"
+                  isChecked ? "bg-primary/5" : "hover:bg-muted/50"
                 }`}
               >
                 <button
                   onClick={() => onToggleItem(i)}
                   className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                    itemChecked ? "bg-primary border-primary" : "border-muted-foreground/30"
+                    isChecked ? "bg-primary border-primary" : "border-muted-foreground/30"
                   }`}
+                  title="Remover este item"
                 >
-                  {itemChecked && <Check className="w-3 h-3 text-primary-foreground" />}
+                  {isChecked && <Trash2 className="w-3 h-3 text-primary-foreground" />}
                 </button>
 
                 {isEditing ? (
@@ -183,7 +174,7 @@ export default function MealCard({
                   </div>
                 ) : (
                   <div className="flex-1 flex items-baseline justify-between gap-2 min-w-0">
-                    <span className={itemChecked ? "line-through text-muted-foreground" : "text-foreground"}>
+                    <span className={isChecked ? "line-through text-muted-foreground" : "text-foreground"}>
                       {displayName}
                     </span>
                     <span className="text-muted-foreground text-xs shrink-0 flex gap-1">

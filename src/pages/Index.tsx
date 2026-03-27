@@ -23,7 +23,7 @@ function dateToKey(d: Date) {
 }
 
 export default function Index() {
-  const { toggleMeal, toggleItem, isItemChecked, isMealChecked, getCheckedCount, setItemEdit, getItemEdit, removedItems, setRemovedItems } = useMealChecks();
+  const { toggleMeal, toggleItem, isItemChecked, isMealChecked, getCheckedCount, setItemEdit, getItemEdit } = useMealChecks();
   const today = new Date();
   const todayStr = dateToKey(today);
 
@@ -35,27 +35,29 @@ export default function Index() {
   const dayMeals = getMealsForDay(dayOfWeek);
   const mainMeals = dayMeals.filter((m) => !m.isOption);
 
-  // Calculate total daily calories considering edits
+  // Calculate total daily calories considering edits and removed items
   const totalDailyCalories = dayMeals.reduce((sum, m) => {
     const mealTotal = m.items.reduce((itemSum, item, i) => {
       const edit = getItemEdit(m.id, i, selectedKey);
+      const isRemoved = isItemChecked(m.id, i, selectedKey);
+      if (isRemoved) return itemSum; // Skip removed items
       return itemSum + (edit.calories !== undefined ? edit.calories : (item.calories || 0));
     }, 0);
     return sum + mealTotal;
   }, 0);
 
-  // Calculate consumed calories for today
+  // Calculate consumed calories: sum of all meals that are checked
   const consumedCaloriesForDay = dayMeals.reduce((sum, m) => {
+    if (!isMealChecked(m.id, selectedKey)) {
+      return sum; // Meal not checked, so no calories consumed
+    }
+    
+    // Meal is checked: sum all non-removed items
     const mealTotal = m.items.reduce((itemSum, item, i) => {
       const edit = getItemEdit(m.id, i, selectedKey);
-      const itemCalories = edit.calories !== undefined ? edit.calories : (item.calories || 0);
       const isRemoved = isItemChecked(m.id, i, selectedKey);
-      
-      // If item is not removed, it's consumed
-      if (!isRemoved) {
-        return itemSum + itemCalories;
-      }
-      return itemSum;
+      if (isRemoved) return itemSum; // Skip removed items
+      return itemSum + (edit.calories !== undefined ? edit.calories : (item.calories || 0));
     }, 0);
     return sum + mealTotal;
   }, 0);
@@ -69,46 +71,6 @@ export default function Index() {
     const d = new Date(selectedDate);
     d.setDate(d.getDate() + dir * 7);
     setSelectedDate(d);
-  };
-
-  const handleToggleMeal = (mealId: string) => {
-    const isMealCurrentlyChecked = isMealChecked(mealId, selectedKey);
-    
-    // If checking the meal, mark all non-removed items as consumed
-    if (!isMealCurrentlyChecked) {
-      const meal = dayMeals.find((m) => m.id === mealId);
-      if (meal) {
-        // Mark all items that are not already removed as consumed
-        setRemovedItems((prev) => {
-          const dayItems = prev[selectedKey] || {};
-          const mealItems = dayItems[mealId] || [];
-          
-          // Add all items to the removed list (marking them as consumed)
-          const updatedMealItems = meal.items.map((_, i) => String(i));
-          
-          return {
-            ...prev,
-            [selectedKey]: {
-              ...dayItems,
-              [mealId]: updatedMealItems,
-            },
-          };
-        });
-      }
-    } else {
-      // If unchecking the meal, clear all removed items for this meal
-      setRemovedItems((prev) => {
-        const dayItems = prev[selectedKey] || {};
-        const { [mealId]: _, ...rest } = dayItems;
-        
-        return {
-          ...prev,
-          [selectedKey]: rest,
-        };
-      });
-    }
-    
-    toggleMeal(mealId, selectedKey);
   };
 
   return (
@@ -210,7 +172,7 @@ export default function Index() {
               key={meal.id}
               meal={meal}
               isChecked={isMealChecked(meal.id, selectedKey)}
-              onToggle={() => handleToggleMeal(meal.id)}
+              onToggle={() => toggleMeal(meal.id, selectedKey)}
               onToggleItem={(idx) => toggleItem(meal.id, idx, selectedKey)}
               isItemChecked={(idx) => isItemChecked(meal.id, idx, selectedKey)}
               getItemEdit={(idx) => getItemEdit(meal.id, idx, selectedKey)}
