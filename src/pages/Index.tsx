@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { meals } from "@/data/mealPlan";
+import { meals, getMealsForDay } from "@/data/mealPlan";
 import { useMealChecks } from "@/hooks/useMealChecks";
 import MealCard from "@/components/MealCard";
 import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
@@ -31,8 +31,11 @@ export default function Index() {
   const selectedKey = dateToKey(selectedDate);
   const weekDates = getWeekDates(selectedDate);
 
-  const mainMeals = meals.filter((m) => !m.isOption);
-  const totalDailyCalories = mainMeals.reduce((sum, m) => sum + m.totalCalories, 0);
+  const dayOfWeek = selectedDate.getDay();
+  const dayMeals = getMealsForDay(dayOfWeek);
+  const mainMeals = dayMeals.filter((m) => !m.isOption);
+
+  const totalDailyCalories = dayMeals.reduce((sum, m) => sum + m.totalCalories, 0);
 
   const isToday = selectedKey === todayStr;
   const dayLabel = WEEKDAYS[selectedDate.getDay()];
@@ -124,9 +127,9 @@ export default function Index() {
           {isToday ? "Hoje" : `${dayLabel}, ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`}
         </p>
 
-        {/* Meals */}
+        {/* Meals for the selected day */}
         <div className="mt-4 space-y-3">
-          {meals.map((meal) => (
+          {dayMeals.map((meal) => (
             <MealCard
               key={meal.id}
               meal={meal}
