@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown, ChevronUp, Pencil, X, BookOpen } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Pencil, X, BookOpen, RotateCcw, Archive } from "lucide-react";
 import type { Meal } from "@/data/mealPlan";
 
 interface MealCardProps {
@@ -37,6 +37,7 @@ export default function MealCard({
 }: MealCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showRecipe, setShowRecipe] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   // Calculate total calories of items NOT removed
@@ -48,6 +49,9 @@ export default function MealCard({
 
   // If meal is checked, all available items (not removed) are consumed
   const consumedCalories = isChecked ? totalCaloriesAvailable : 0;
+
+  // Get removed items
+  const removedItems = meal.items.filter((_, i) => isItemChecked(i));
 
   return (
     <div
@@ -127,7 +131,7 @@ export default function MealCard({
             const itemRemoved = isItemChecked(i);
             const isEditing = editingIndex === i;
 
-            // Don't show removed items
+            // Don't show removed items in the main list
             if (itemRemoved) {
               return null;
             }
@@ -193,6 +197,57 @@ export default function MealCard({
               </div>
             );
           })}
+
+          {/* Archived items section */}
+          {removedItems.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-muted/50">
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+              >
+                <Archive className="w-3.5 h-3.5" />
+                <span>Itens Removidos ({removedItems.length})</span>
+                {showArchived ? <ChevronUp className="w-3 h-3 ml-auto" /> : <ChevronDown className="w-3 h-3 ml-auto" />}
+              </button>
+
+              {showArchived && (
+                <div className="mt-2 space-y-1.5 bg-muted/30 rounded-lg p-2">
+                  {meal.items.map((item, i) => {
+                    const edit = getItemEdit(i);
+                    const displayName = edit.name || item.name;
+                    const displayPortion = edit.portion || item.portion;
+                    const itemRemoved = isItemChecked(i);
+
+                    if (!itemRemoved) return null;
+
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 text-xs rounded-md px-2 py-1.5 bg-white/50 hover:bg-white/70 transition-colors"
+                      >
+                        <span className="text-muted-foreground line-through opacity-70">
+                          {displayName}
+                        </span>
+                        <span className="text-muted-foreground text-xs shrink-0 opacity-70">
+                          {displayPortion}
+                        </span>
+                        <span className="text-muted-foreground text-xs font-medium opacity-70">
+                          ({edit.calories !== undefined ? edit.calories : (item.calories || 0)} kcal)
+                        </span>
+                        <button
+                          onClick={() => onToggleItem(i)}
+                          className="ml-auto shrink-0 p-1 rounded hover:bg-primary/20 text-primary hover:text-primary transition-colors"
+                          title="Restaurar este item"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
