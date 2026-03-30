@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { meals, getMealsForDay } from "@/data/mealPlan";
 import { useMealChecks } from "@/hooks/useMealChecks";
 import MealCard from "@/components/MealCard";
@@ -30,6 +30,14 @@ export default function Index() {
   const [selectedDate, setSelectedDate] = useState(today);
   const selectedKey = dateToKey(selectedDate);
   const weekDates = getWeekDates(selectedDate);
+
+  // Auto-scroll to today's date in the week view
+  useEffect(() => {
+    const todayElement = document.getElementById(`day-${todayStr}`);
+    if (todayElement) {
+      todayElement.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, [todayStr]);
 
   const dayOfWeek = selectedDate.getDay();
   const dayMeals = getMealsForDay(dayOfWeek);
@@ -74,15 +82,15 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen pb-12 bg-gradient-to-b from-background to-background/95">
+    <div className="min-h-screen pb-12 bg-gradient-to-b from-background via-background to-secondary/10">
       <header className="sticky top-0 z-10 glass-effect border-b border-white/20 px-4 py-5 sm:py-6">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20">
               <Target className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
                 Plano Alimentar
               </h1>
               <p className="text-xs text-muted-foreground">Isadora Miranda • Bianca</p>
@@ -93,10 +101,10 @@ export default function Index() {
 
       <div className="max-w-lg mx-auto px-4 sm:px-6">
         {/* Calories summary - Premium Dashboard */}
-        <div className="mt-6 rounded-2xl bg-gradient-to-br from-primary/10 via-white to-accent/10 p-5 sm:p-6 smooth-shadow-lg border border-primary/10">
+        <div className="mt-6 rounded-2xl bg-gradient-to-br from-primary/15 via-secondary/10 to-accent/15 p-5 sm:p-6 smooth-shadow-lg border border-primary/20">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-primary/20">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-primary/30 to-secondary/30">
                 <Flame className="w-5 h-5 text-primary" />
               </div>
               <div>
@@ -106,7 +114,7 @@ export default function Index() {
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground mb-1">Refeições</p>
-              <p className="text-2xl font-bold text-primary">
+              <p className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 {getCheckedCount(selectedKey)}/{mainMeals.length}
               </p>
             </div>
@@ -117,16 +125,16 @@ export default function Index() {
             <div className="flex justify-between items-end gap-3">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground mb-1.5 font-medium">Consumidas</p>
-                <p className="text-3xl font-bold text-primary">{consumedCaloriesForDay}</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{consumedCaloriesForDay}</p>
               </div>
               <div className="flex-1 text-right">
                 <p className="text-xs text-muted-foreground mb-1.5 font-medium">Restantes</p>
-                <p className="text-3xl font-bold text-accent">{remainingCalories}</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">{remainingCalories}</p>
               </div>
             </div>
             <div className="w-full bg-white/60 rounded-full h-3 overflow-hidden border border-primary/10">
               <div
-                className="bg-gradient-to-r from-primary via-primary to-accent h-full transition-all duration-500 ease-out rounded-full shadow-lg"
+                className="bg-gradient-to-r from-primary via-secondary to-accent h-full transition-all duration-500 ease-out rounded-full shadow-lg"
                 style={{
                   width: `${progressPercentage}%`,
                 }}
@@ -138,50 +146,55 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Week navigation */}
+        {/* Week navigation - Improved responsiveness */}
         <div className="mt-8 flex items-center gap-2">
           <button 
             onClick={() => shiftWeek(-1)} 
-            className="p-2.5 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95"
+            className="p-2.5 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95 flex-shrink-0"
           >
             <ChevronLeft className="w-5 h-5 text-muted-foreground" />
           </button>
-          <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 scroll-smooth">
-            {weekDates.map((date) => {
-              const dateStr = dateToKey(date);
-              const isSelected = dateStr === selectedKey;
-              const isTodayDate = dateStr === todayStr;
-              const dayName = WEEKDAYS[date.getDay()];
-              const checkedCount = getCheckedCount(dateStr);
+          
+          <div className="flex-1 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1.5 pb-1 px-1">
+              {weekDates.map((date) => {
+                const dateStr = dateToKey(date);
+                const isSelected = dateStr === selectedKey;
+                const isTodayDate = dateStr === todayStr;
+                const dayName = WEEKDAYS[date.getDay()];
+                const checkedCount = getCheckedCount(dateStr);
 
-              return (
-                <button
-                  key={dateStr}
-                  onClick={() => setSelectedDate(date)}
-                  className={`flex flex-col items-center min-w-[3.5rem] px-3 py-3 rounded-xl text-center transition-all duration-200 font-medium active:scale-95 ${
-                    isSelected
-                      ? "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg scale-105"
-                      : isTodayDate
-                      ? "bg-accent/20 text-foreground ring-2 ring-accent/50 hover:bg-accent/30"
-                      : "bg-white text-foreground hover:bg-muted/50 smooth-shadow"
-                  }`}
-                >
-                  <span className="text-[11px] font-bold uppercase tracking-wider opacity-70">
-                    {dayName.slice(0, 3)}
-                  </span>
-                  <span className="text-lg font-bold leading-tight mt-1">{date.getDate()}</span>
-                  {checkedCount > 0 && (
-                    <span className={`text-[10px] mt-1 font-bold ${isSelected ? "text-primary-foreground/90" : "text-primary"}`}>
-                      {checkedCount}✓
+                return (
+                  <button
+                    key={dateStr}
+                    id={`day-${dateStr}`}
+                    onClick={() => setSelectedDate(date)}
+                    className={`flex flex-col items-center min-w-[3.2rem] px-3 py-3 rounded-xl text-center transition-all duration-200 font-medium active:scale-95 flex-shrink-0 ${
+                      isSelected
+                        ? "bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg scale-105"
+                        : isTodayDate
+                        ? "bg-accent/25 text-foreground ring-2 ring-accent/60 hover:bg-accent/35"
+                        : "bg-white text-foreground hover:bg-muted/50 smooth-shadow"
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+                      {dayName.slice(0, 3)}
                     </span>
-                  )}
-                </button>
-              );
-            })}
+                    <span className="text-lg font-bold leading-tight mt-1">{date.getDate()}</span>
+                    {checkedCount > 0 && (
+                      <span className={`text-[10px] mt-1 font-bold ${isSelected ? "text-primary-foreground/90" : "text-primary"}`}>
+                        {checkedCount}✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
           <button 
             onClick={() => shiftWeek(1)} 
-            className="p-2.5 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95"
+            className="p-2.5 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95 flex-shrink-0"
           >
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -209,7 +222,7 @@ export default function Index() {
         </div>
 
         {/* Tips */}
-        <div className="mt-10 rounded-2xl bg-gradient-to-br from-secondary/20 to-accent/10 p-5 sm:p-6 border border-secondary/20 smooth-shadow">
+        <div className="mt-10 rounded-2xl bg-gradient-to-br from-secondary/20 to-accent/15 p-5 sm:p-6 border border-secondary/20 smooth-shadow">
           <h3 className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
             <span className="text-lg">💡</span>
             <span>Dicas de Bem-estar</span>
@@ -234,6 +247,16 @@ export default function Index() {
           </ul>
         </div>
       </div>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }
