@@ -25,12 +25,13 @@ const FDS = [0, 6]; // sábado e domingo
 const WEEKDAYS_ONLY = [1, 2, 3, 4, 5];
 
 export const meals: Meal[] = [
-  // ===== CAFÉ DA MANHÃ =====
+  // ===== CAFÉ DA MANHÃ - SEGUNDA =====
   {
-    id: "breakfast",
+    id: "breakfast-mon",
     time: "09:00",
     name: "Café da manhã",
     type: "breakfast",
+    showOnDays: [1], // Segunda
     totalCalories: 310,
     items: [
       { name: "Café", portion: "1 xícara (200ml)", calories: 5 },
@@ -39,6 +40,114 @@ export const meals: Meal[] = [
       { name: "Pão integral", portion: "1 fatia (25g)", calories: 60 },
     ],
     recipe: "Prepare os ovos mexidos ou cozidos. Sirva com uma fatia de pão integral e queijo minas. Acompanhe com café sem açúcar ou com adoçante.",
+  },
+
+  // ===== CAFÉ DA MANHÃ - TERÇA =====
+  {
+    id: "breakfast-tue",
+    time: "09:00",
+    name: "Café da manhã",
+    type: "breakfast",
+    showOnDays: [2], // Terça
+    totalCalories: 320,
+    items: [
+      { name: "Café", portion: "1 xícara (200ml)", calories: 5 },
+      { name: "Banana", portion: "1 unidade pequena (80g)", calories: 70 },
+      { name: "Ovo de galinha", portion: "1 unidade (50g)", calories: 70 },
+      { name: "Aveia em flocos", portion: "3 col. sopa (30g)", calories: 110 },
+      { name: "Mel", portion: "1 col. chá (10g)", calories: 30 },
+    ],
+    recipe: "Misture a aveia com 100ml de leite desnatado. Amasse a banana e misture. Frite o ovo em frigideira antiaderente. Sirva tudo junto com um fio de mel.",
+  },
+
+  // ===== CAFÉ DA MANHÃ - QUARTA =====
+  {
+    id: "breakfast-wed",
+    time: "09:00",
+    name: "Café da manhã",
+    type: "breakfast",
+    showOnDays: [3], // Quarta
+    totalCalories: 305,
+    items: [
+      { name: "Café", portion: "1 xícara (200ml)", calories: 5 },
+      { name: "Iogurte grego natural", portion: "150g", calories: 100 },
+      { name: "Granola caseira", portion: "2 col. sopa (30g)", calories: 120 },
+      { name: "Morango", portion: "5 unidades (75g)", calories: 30 },
+      { name: "Mel", portion: "1 col. chá (10g)", calories: 30 },
+    ],
+    recipe: "Coloque o iogurte em uma tigela. Cubra com granola e morangos picados. Finalize com um fio de mel. Acompanhe com café.",
+  },
+
+  // ===== CAFÉ DA MANHÃ - QUINTA =====
+  {
+    id: "breakfast-thu",
+    time: "09:00",
+    name: "Café da manhã",
+    type: "breakfast",
+    showOnDays: [4], // Quinta
+    totalCalories: 315,
+    items: [
+      { name: "Café", portion: "1 xícara (200ml)", calories: 5 },
+      { name: "Torrada integral", portion: "2 fatias (40g)", calories: 90 },
+      { name: "Abacate", portion: "1/2 unidade (60g)", calories: 95 },
+      { name: "Ovo cozido", portion: "1 unidade (50g)", calories: 70 },
+      { name: "Tomate", portion: "2 fatias (40g)", calories: 8 },
+    ],
+    recipe: "Tueste o pão integral. Amasse o abacate e espalhe nas torradas. Coloque o ovo cozido fatiado e tomate por cima. Tempere com sal e pimenta.",
+  },
+
+  // ===== CAFÉ DA MANHÃ - SEXTA =====
+  {
+    id: "breakfast-fri",
+    time: "09:00",
+    name: "Café da manhã",
+    type: "breakfast",
+    showOnDays: [5], // Sexta
+    totalCalories: 300,
+    items: [
+      { name: "Café", portion: "1 xícara (200ml)", calories: 5 },
+      { name: "Pão integral", portion: "1 fatia (25g)", calories: 60 },
+      { name: "Queijo branco", portion: "1 fatia (30g)", calories: 50 },
+      { name: "Presunto magro", portion: "2 fatias (30g)", calories: 50 },
+      { name: "Maçã", portion: "1 unidade pequena (120g)", calories: 65 },
+    ],
+    recipe: "Monte um sanduíche simples com pão integral, queijo branco e presunto magro. Acompanhe com uma maçã fresca e café.",
+  },
+
+  // ===== CAFÉ DA MANHÃ - SÁBADO =====
+  {
+    id: "breakfast-sat",
+    time: "09:00",
+    name: "Café da manhã",
+    type: "breakfast",
+    showOnDays: [6], // Sábado
+    totalCalories: 325,
+    items: [
+      { name: "Café", portion: "1 xícara (200ml)", calories: 5 },
+      { name: "Ovo de galinha", portion: "2 unidades (100g)", calories: 140 },
+      { name: "Queijo minas frescal", portion: "1 fatia (30g)", calories: 55 },
+      { name: "Pão integral", portion: "1 fatia (25g)", calories: 60 },
+      { name: "Laranja", portion: "1 unidade pequena (90g)", calories: 40 },
+    ],
+    recipe: "Prepare os ovos mexidos ou cozidos. Sirva com queijo minas e pão integral. Acompanhe com suco de laranja fresco e café.",
+  },
+
+  // ===== CAFÉ DA MANHÃ - DOMINGO =====
+  {
+    id: "breakfast-sun",
+    time: "09:00",
+    name: "Café da manhã",
+    type: "breakfast",
+    showOnDays: [0], // Domingo
+    totalCalories: 310,
+    items: [
+      { name: "Café", portion: "1 xícara (200ml)", calories: 5 },
+      { name: "Iogurte natural desnatado", portion: "170g", calories: 85 },
+      { name: "Aveia em flocos", portion: "3 col. sopa (30g)", calories: 110 },
+      { name: "Banana", portion: "1 unidade pequena (80g)", calories: 70 },
+      { name: "Mel", portion: "1 col. chá (10g)", calories: 30 },
+    ],
+    recipe: "Misture o iogurte com aveia. Pique a banana e distribua por cima. Finalize com um fio de mel. Acompanhe com café.",
   },
 
   // ===== ALMOÇO - SEGUNDA =====
@@ -173,12 +282,13 @@ export const meals: Meal[] = [
     recipe: "Tempere o salmão com sal, limão e ervas. Asse a 200°C por 15 min. Asse a batata doce com azeite. Sirva com feijão, salada e vegetais.",
   },
 
-  // ===== LANCHE =====
+  // ===== LANCHE - SEGUNDA =====
   {
-    id: "snack",
+    id: "snack-mon",
     time: "16:00",
     name: "Lanche",
     type: "snack",
+    showOnDays: [1], // Segunda
     totalCalories: 350,
     items: [
       { name: "Iogurte natural desnatado", portion: "170g", calories: 85 },
@@ -188,6 +298,113 @@ export const meals: Meal[] = [
       { name: "Chocolate amargo", portion: "4 quadrados (24g)", calories: 90 },
     ],
     recipe: "Misture o iogurte com farelo de aveia e whey protein. Cubra com as uvas cortadas ao meio e os quadrados de chocolate amargo picados.",
+  },
+
+  // ===== LANCHE - TERÇA =====
+  {
+    id: "snack-tue",
+    time: "16:00",
+    name: "Lanche",
+    type: "snack",
+    showOnDays: [2], // Terça
+    totalCalories: 340,
+    items: [
+      { name: "Castanha de caju", portion: "10 unidades (30g)", calories: 160 },
+      { name: "Noz", portion: "3 unidades (15g)", calories: 100 },
+      { name: "Maçã", portion: "1 unidade pequena (120g)", calories: 65 },
+      { name: "Água com limão", portion: "200ml", calories: 0 },
+    ],
+    recipe: "Combine as castanhas e nozes com a maçã picada. Perfeito para levar na bolsa e comer em qualquer lugar!",
+  },
+
+  // ===== LANCHE - QUARTA =====
+  {
+    id: "snack-wed",
+    time: "16:00",
+    name: "Lanche",
+    type: "snack",
+    showOnDays: [3], // Quarta
+    totalCalories: 355,
+    items: [
+      { name: "Leite desnatado", portion: "200ml", calories: 70 },
+      { name: "Morango", portion: "100g", calories: 30 },
+      { name: "Banana", portion: "1 unidade pequena (80g)", calories: 70 },
+      { name: "Whey Protein", portion: "0.5 dosador (15g)", calories: 55 },
+      { name: "Mel", portion: "1 col. chá (10g)", calories: 30 },
+    ],
+    recipe: "Bata o leite com morango, banana, whey e mel no liquidificador. Sirva gelado e pronto para beber!",
+  },
+
+  // ===== LANCHE - QUINTA =====
+  {
+    id: "snack-thu",
+    time: "16:00",
+    name: "Lanche",
+    type: "snack",
+    showOnDays: [4], // Quinta
+    totalCalories: 345,
+    items: [
+      { name: "Pão integral", portion: "1 fatia (25g)", calories: 60 },
+      { name: "Atum em lata (ao natural)", portion: "1 lata pequena (60g)", calories: 70 },
+      { name: "Alface", portion: "2 folhas", calories: 5 },
+      { name: "Tomate", portion: "2 fatias (40g)", calories: 8 },
+      { name: "Maionese light", portion: "1 col. chá (5g)", calories: 25 },
+      { name: "Pêra", portion: "1 unidade pequena (120g)", calories: 60 },
+    ],
+    recipe: "Misture o atum com um pouco de maionese light. Monte um mini sanduíche com alface, tomate e atum. Acompanhe com uma pêra fresca.",
+  },
+
+  // ===== LANCHE - SEXTA =====
+  {
+    id: "snack-fri",
+    time: "16:00",
+    name: "Lanche",
+    type: "snack",
+    showOnDays: [5], // Sexta
+    totalCalories: 350,
+    items: [
+      { name: "Iogurte grego natural", portion: "150g", calories: 100 },
+      { name: "Granola caseira", portion: "2 col. sopa (30g)", calories: 120 },
+      { name: "Mel", portion: "1 col. chá (10g)", calories: 30 },
+      { name: "Amêndoa", portion: "10 unidades (10g)", calories: 60 },
+      { name: "Blueberry", portion: "1/2 xícara (50g)", calories: 40 },
+    ],
+    recipe: "Coloque o iogurte grego em uma tigela. Cubra com granola, amêndoas e blueberries. Finalize com um fio de mel.",
+  },
+
+  // ===== LANCHE - SÁBADO =====
+  {
+    id: "snack-sat",
+    time: "16:00",
+    name: "Lanche",
+    type: "snack",
+    showOnDays: [6], // Sábado
+    totalCalories: 360,
+    items: [
+      { name: "Iogurte natural desnatado", portion: "170g", calories: 85 },
+      { name: "Uva", portion: "6 unidades (48g)", calories: 30 },
+      { name: "Farelo de aveia", portion: "3 col. sopa (30g)", calories: 90 },
+      { name: "Whey Protein", portion: "0.5 dosador (15g)", calories: 55 },
+      { name: "Chocolate amargo", portion: "4 quadrados (24g)", calories: 90 },
+    ],
+    recipe: "Misture o iogurte com farelo de aveia e whey protein. Cubra com as uvas cortadas ao meio e os quadrados de chocolate amargo picados.",
+  },
+
+  // ===== LANCHE - DOMINGO =====
+  {
+    id: "snack-sun",
+    time: "16:00",
+    name: "Lanche",
+    type: "snack",
+    showOnDays: [0], // Domingo
+    totalCalories: 340,
+    items: [
+      { name: "Leite desnatado", portion: "200ml", calories: 70 },
+      { name: "Banana", portion: "1 unidade pequena (80g)", calories: 70 },
+      { name: "Aveia em flocos", portion: "3 col. sopa (30g)", calories: 110 },
+      { name: "Mel", portion: "1 col. chá (10g)", calories: 30 },
+    ],
+    recipe: "Misture o leite com aveia e banana. Adicione um fio de mel. Deixe descansar 5 minutos e sirva.",
   },
 
   // ===== JANTAR - SEGUNDA =====
